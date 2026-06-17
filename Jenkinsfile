@@ -31,7 +31,7 @@ pipeline {
         stage('Build Hello Service') {
             steps {
                 sh '''
-                cd hello-service
+                cd /Orchestration/Orchestration-and-Scaling-Project/backend/helloservice/
                 docker build -t hello-service .
                 '''
             }
@@ -40,7 +40,7 @@ pipeline {
         stage('Build Profile Service') {
             steps {
                 sh '''
-                cd profile-service
+                cd /Orchestration/Orchestration-and-Scaling-Project/backend/profileservice/
                 docker build -t profile-service .
                 '''
             }
@@ -49,7 +49,7 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 sh '''
-                cd frontend
+                cd /Orchestration/Orchestration-and-Scaling-Project/frontend/
                 docker build -t frontend .
                 '''
             }
