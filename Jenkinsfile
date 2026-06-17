@@ -3,22 +3,36 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
-        ACCOUNT_ID = '076124126275'
+        AWS_ACCOUNT_ID = '076124126275'
+
+        HELLO_IMAGE   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/hello-service"
+        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profile-service"
+        FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/yourrepo/project.git'
+                checkout scm
+            }
+        }
+
+        stage('Verify Tools') {
+            steps {
+                sh '''
+                git --version
+                docker --version
+                aws --version
+                '''
             }
         }
 
         stage('Build Hello Service') {
             steps {
                 sh '''
-                docker build -t helloservice ./HelloService
+                cd hello-service
+                docker build -t hello-service .
                 '''
             }
         }
@@ -26,7 +40,8 @@ pipeline {
         stage('Build Profile Service') {
             steps {
                 sh '''
-                docker build -t profileservice ./ProfileService
+                cd profile-service
+                docker build -t profile-service .
                 '''
             }
         }
@@ -34,18 +49,28 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 sh '''
-                docker build -t frontend ./Frontend
+                cd frontend
+                docker build -t frontend .
                 '''
             }
         }
 
-        stage('Login ECR') {
+        stage('Login to ECR') {
             steps {
                 sh '''
-                aws ecr get-login-password \
-                --region $AWS_REGION | docker login \
-                --username AWS \
-                --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                aws ecr get-login-password --region $AWS_REGION | \
+                docker login --username AWS --password-stdin \
+                $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                '''
+            }
+        }
+
+        stage('Tag Images') {
+            steps {
+                sh '''
+                docker tag hello-service:latest $HELLO_IMAGE:latest
+                docker tag profile-service:latest $PROFILE_IMAGE:latest
+                docker tag frontend:latest $FRONTEND_IMAGE:latest
                 '''
             }
         }
@@ -53,22 +78,21 @@ pipeline {
         stage('Push Images') {
             steps {
                 sh '''
-                docker tag helloservice:latest \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/helloservice:latest
-
-                docker tag profileservice:latest \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/profilefile:latest
-
-                docker tag frontend:latest \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/mern-frontend:latest
-
-                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/helloservice:latest
-
-                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/profilefile:latest
-
-                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/mern-frontend:latest
+                docker push $HELLO_IMAGE:latest
+                docker push $PROFILE_IMAGE:latest
+                docker push $FRONTEND_IMAGE:latest
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed. Check Jenkins console output.'
         }
     }
 }
