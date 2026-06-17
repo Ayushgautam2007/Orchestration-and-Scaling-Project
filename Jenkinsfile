@@ -1,98 +1,107 @@
 pipeline {
-    agent any
+agent any
 
-    environment {
-        AWS_REGION = 'ap-south-1'
-        AWS_ACCOUNT_ID = '076124126275'
+```
+environment {
+    AWS_REGION = 'ap-south-1'
+    ACCOUNT_ID = '076124126275'
+}
 
-        HELLO_IMAGE   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/helloservice"
-        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profilefile"
-        FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend"
+stages {
+
+    stage('Checkout') {
+        steps {
+            checkout scm
+        }
     }
 
-    stages {
-
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
+    stage('Verify Tools') {
+        steps {
+            sh '''
+            git --version
+            docker --version
+            aws --version
+            '''
         }
+    }
 
-        stage('Verify Tools') {
-            steps {
+    stage('Build Hello Service') {
+        steps {
+            dir('backend/helloservice') {
                 sh '''
-                git --version
-                docker --version
-                aws --version
+                docker build -t hello-service .
                 '''
             }
         }
+    }
 
-        stage('Build Hello Service') {
-            steps {
+    stage('Build Profile Service') {
+        steps {
+            dir('backend/profileservice') {
                 sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/backend/helloservice/
-                docker build -t helloservice .
+                docker build -t profile-service .
                 '''
             }
         }
+    }
 
-        stage('Build Profile Service') {
-            steps {
+    stage('Build Frontend') {
+        steps {
+            dir('frontend') {
                 sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/backend/profilefile/
-                docker build -t profileservice .
-                '''
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/frontend/
                 docker build -t frontend .
                 '''
             }
         }
+    }
 
-        stage('Login to ECR') {
-            steps {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION | \
-                docker login --username AWS --password-stdin \
-                $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-                '''
-            }
-        }
-
-        stage('Tag Images') {
-            steps {
-                sh '''
-                docker tag hello-service:latest $HELLO_IMAGE:latest
-                docker tag profile-service:latest $PROFILE_IMAGE:latest
-                docker tag frontend:latest $FRONTEND_IMAGE:latest
-                '''
-            }
-        }
-
-        stage('Push Images') {
-            steps {
-                sh '''
-                docker push $HELLO_IMAGE:latest
-                docker push $PROFILE_IMAGE:latest
-                docker push $FRONTEND_IMAGE:latest
-                '''
-            }
+    stage('Login to ECR') {
+        steps {
+            sh '''
+            aws ecr get-login-password --region ${AWS_REGION} | \
+            docker login --username AWS \
+            --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+            '''
         }
     }
 
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
+    stage('Tag Images') {
+        steps {
+            sh '''
+            docker tag hello-service:latest \
+            ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/helloservice:latest
 
-        failure {
-            echo 'Pipeline failed. Check Jenkins console output.'
+            docker tag profile-service:latest \
+            ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profilefile:latest
+
+            docker tag frontend:latest \
+            ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mern-frontend:latest
+            '''
         }
     }
+
+    stage('Push Images') {
+        steps {
+            sh '''
+            docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/helloservice:latest
+
+            docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profilefile:latest
+
+            docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mern-frontend:latest
+            '''
+        }
+    }
+}
+
+post {
+    success {
+        echo 'Pipeline completed successfully!'
+    }
+
+    failure {
+        echo 'Pipeline failed. Check Jenkins console output.'
+    }
+}
+```
+
 }
