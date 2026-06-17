@@ -5,8 +5,8 @@ pipeline {
         AWS_REGION = 'ap-south-1'
         AWS_ACCOUNT_ID = '076124126275'
 
-        HELLO_IMAGE   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/hello-service"
-        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profile-service"
+        HELLO_IMAGE   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/helloservice"
+        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profileservice"
         FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend"
     }
 
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                 cd /Orchestration/Orchestration-and-Scaling-Project/backend/helloservice/
-                docker build -t hello-service .
+                docker build -t helloservice .
                 '''
             }
         }
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 sh '''
                 cd /Orchestration/Orchestration-and-Scaling-Project/backend/profileservice/
-                docker build -t profile-service .
+                docker build -t profileservice .
                 '''
             }
         }
