@@ -6,7 +6,7 @@ pipeline {
         AWS_ACCOUNT_ID = '076124126275'
 
         HELLO_IMAGE   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/helloservice"
-        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profileservice"
+        PROFILE_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/profilefile"
         FRONTEND_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend"
     }
 
@@ -40,7 +40,7 @@ pipeline {
         stage('Build Profile Service') {
             steps {
                 sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/backend/profileservice/
+                cd /Orchestration/Orchestration-and-Scaling-Project/backend/profilefile/
                 docker build -t profileservice .
                 '''
             }
