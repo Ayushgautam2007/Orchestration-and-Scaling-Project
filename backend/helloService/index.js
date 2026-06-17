@@ -9,7 +9,7 @@ app.use(cors())
 
 app.use(express.json());
 app.get('/', (req,res)=>{
-    res.send({msg: 'Hello World'})
+    res.send({msg: 'Hello World this is my first project on CI/CD pipeline'})
 })
 app.get('/health', (req,res)=>{
     res.send({status: 'OK'})
