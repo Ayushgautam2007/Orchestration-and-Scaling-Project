@@ -1,7 +1,6 @@
 pipeline {
 agent any
 
-```
 environment {
     AWS_REGION = 'ap-south-1'
     ACCOUNT_ID = '583067667472'
@@ -101,7 +100,6 @@ post {
         echo 'Pipeline failed. Check Jenkins console output.'
     }
 }
-```
 
 }
 
