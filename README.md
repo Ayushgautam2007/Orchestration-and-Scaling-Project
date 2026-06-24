@@ -254,5 +254,12 @@ The following resources were cleaned up:
 
 This was done as the project was completed and keeping the resources running would incur additional AWS costs.
 
+
+## Cost Optimization
+
+After successful project completion and validation, all AWS resources including EKS cluster, worker nodes, load balancers, EC2 instances and other temporary infrastructure were terminated to avoid unnecessary AWS charges.
+
 ---
+
+
 
