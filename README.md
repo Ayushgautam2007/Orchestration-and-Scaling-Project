@@ -256,10 +256,3 @@ This was done as the project was completed and keeping the resources running wou
 
 ---
 
-## Author
-
-Ayush Gautam
-
-Hero Vired
-
-Orchestration and Scaling Project
