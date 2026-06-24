@@ -1,96 +1,105 @@
 pipeline {
-    agent any
+agent any
 
-    environment {
-        AWS_REGION = 'ap-south-1'
-        ACCOUNT_ID = '076124126275'
+environment {
+    AWS_REGION = 'ap-south-1'
+    ACCOUNT_ID = '583067667472'
+    ECR_REGISTRY = "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+}
+
+stages {
+
+    stage('Checkout') {
+        steps {
+            checkout scm
+        }
     }
 
-    stages {
-
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
+    stage('Verify Tools') {
+        steps {
+            sh '''
+            pwd
+            ls -la
+            git --version
+            docker --version
+            aws --version
+            '''
         }
+    }
 
-        stage('Verify Tools') {
-            steps {
+    stage('Build Hello Service') {
+        steps {
+            dir('backend/helloService') {
                 sh '''
-                git --version
-                docker --version
-                aws --version
-                '''
-            }
-        }
-
-        stage('Build Hello Service') {
-            steps {
-                sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/backend/helloservice/
-                docker build -t hello-service .
-                '''
-            }
-        }
-
-        stage('Build Profile Service') {
-            steps {
-                sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/backend/profileservice/
-                docker build -t profile-service .
-                '''
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                sh '''
-                cd /Orchestration/Orchestration-and-Scaling-Project/frontend/
-                docker build -t frontend .
-                '''
-            }
-        }
-
-        stage('Login to ECR') {
-            steps {
-                sh '''
-                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 076124126275.dkr.ecr.ap-south-1.amazonaws.com
-                '''
-            }
-        }
-
-        stage('Tag Images') {
-            steps {
-                sh '''
-                docker tag hello-service:latest 076124126275.dkr.ecr.ap-south-1.amazonaws.com/helloservice:latest
-
-                docker tag profile-service:latest 076124126275.dkr.ecr.ap-south-1.amazonaws.com/profilefile:latest
-
-                docker tag frontend:latest 076124126275.dkr.ecr.ap-south-1.amazonaws.com/mern-frontend:latest
-                '''
-            }
-        }
-
-        stage('Push Images') {
-            steps {
-                sh '''
-                docker push 076124126275.dkr.ecr.ap-south-1.amazonaws.com/helloservice:latest
-
-                docker push 076124126275.dkr.ecr.ap-south-1.amazonaws.com/profilefile:latest
-
-                docker push 076124126275.dkr.ecr.ap-south-1.amazonaws.com/mern-frontend:latest
+                docker build -t hello-service:latest .
                 '''
             }
         }
     }
 
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
+    stage('Build Profile Service') {
+        steps {
+            dir('backend/profileService') {
+                sh '''
+                docker build -t profile-service:latest .
+                '''
+            }
         }
+    }
 
-        failure {
-            echo 'Pipeline failed. Check Jenkins console output.'
+    stage('Build Frontend') {
+        steps {
+            dir('frontend') {
+                sh '''
+                docker build -t frontend:latest .
+                '''
+            }
+        }
+    }
+
+    stage('Login to ECR') {
+        steps {
+            sh '''
+            aws ecr get-login-password --region ${AWS_REGION} | \
+            docker login --username AWS --password-stdin ${ECR_REGISTRY}
+            '''
+        }
+    }
+
+    stage('Tag Images') {
+        steps {
+            sh '''
+            docker tag hello-service:latest ${ECR_REGISTRY}/helloservice:latest
+
+            docker tag profile-service:latest ${ECR_REGISTRY}/profileservice:latest
+
+            docker tag frontend:latest ${ECR_REGISTRY}/frontend:latest
+            '''
+        }
+    }
+
+    stage('Push Images') {
+        steps {
+            sh '''
+            docker push ${ECR_REGISTRY}/helloservice:latest
+
+            docker push ${ECR_REGISTRY}/profileservice:latest
+
+            docker push ${ECR_REGISTRY}/frontend:latest
+            '''
         }
     }
 }
+
+post {
+    success {
+        echo 'Pipeline completed successfully!'
+    }
+
+    failure {
+        echo 'Pipeline failed. Check Jenkins console output.'
+    }
+}
+
+}
+
