@@ -1,0 +1,11 @@
+hello:
+  image: 583067667472.dkr.ecr.ap-south-1.amazonaws.com/helloservice:latest
+  replicas: 1
+
+profile:
+  image: 583067667472.dkr.ecr.ap-south-1.amazonaws.com/profileservice:latest
+  replicas: 1
+
+frontend:
+  image: 583067667472.dkr.ecr.ap-south-1.amazonaws.com/frontend:latest
+  replicas: 1
